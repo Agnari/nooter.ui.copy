@@ -1,0 +1,24 @@
+# Node dependencies
+/node_modules
+
+# Build output
+/build
+
+# Test coverage
+/coverage
+  
+# Editor/IDE files
+.vscode/
+.vs/
+
+# Visual Studio artifacts
+*.vsidx
+*.slnx.sqlite
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS junk
+.DS_Store
+Thumbs.db
