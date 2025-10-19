@@ -1,93 +1,196 @@
-import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
-import Grid from '@mui/material/Grid';
-import Container from '@mui/material/Container';
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from 'react-router-dom';
-import DoneOutlineIcon from '@mui/icons-material/DoneOutline';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import '../styles.css';
-import { getToken } from '../utils/auth';
+import { Link, useSearchParams } from "react-router-dom";
+import {
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Container,
+  Grid,
+} from "@mui/material";
+import DoneOutlineIcon from "@mui/icons-material/DoneOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import Swal from "sweetalert2";
+import { getToken } from "../utils/auth";
+import "../styles.css";
 
 export function YourPosts() {
-    const [id, setId] = useSearchParams();
-    const Swal = require('sweetalert2');
+  const [searchParams] = useSearchParams();
+  const userId = searchParams.get("id");
+  const [posts, setPosts] = useState([]);
 
-    const [items, setItems] = useState([]);
-    useEffect(() => {
-        fetch(`${process.env.REACT_APP_API_URL}/api/articles/` + id.get("id") + `/usersAllArticles`)
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    setItems(result);
-                    console.log(result);
-                }
-            )
-    }, [])
+  useEffect(() => {
+    if (!userId) return;
+    fetchUserPosts(userId);
+  }, [userId]);
 
-    const token = getToken();
-    const deletePost = (id: string) => {
-
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            iconColor: "red",
-            color: "red",
-            showCancelButton: true,
-            confirmButtonColor: 'darkred',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result: any) => {
-            if (result.isConfirmed) {
-                Swal.fire(
-                    'Deleted!',
-                    'Article has been deleted.',
-                    'success'
-                )
-                fetch(`${process.env.REACT_APP_API_URL}/api/articles/` + id, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    method: 'DELETE'
-                })
-                setItems((items) => items.filter((article: any) => article.id !== id))
-            }
-        })
+  const fetchUserPosts = async (id: string) => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/articles/${id}/usersAllArticles`
+      );
+      const data = await response.json();
+      setPosts(data);
+    } catch (error) {
+      console.error("Failed to fetch posts:", error);
     }
+  };
 
-    return (
-        <Container className="paperStack" maxWidth="md">
-            <h2 className="hover1" style={{ fontFamily: "Cabin Sketch", fontSize: 50, height: 44, width: 300 }}> <DoneOutlineIcon sx={{ color: "black" }} />Your Posts
-                <img className="ducktrigger" src={require("../stickers/wtf.png")} alt="lol no" style={{ height: "30px", width: "30px", transform: "rotate(3deg)" }} />
-                Your Posts
-            </h2>
-            <Grid container spacing={0.5} sx={{ transform: "translate(1.5873015873015872vw, -3vw)" }}>
-                {items.map((articles: any) => (
-                    <Grid item key={articles.id} xs={12} sm={12} md={12}>
-                        <CheckCircleOutlineIcon sx={{ transform: "translate(-28px, 20px)", color: "darkred", filter: "drop-shadow(1px 1px 1px black)" }} />
+  const deletePost = async (postId: string) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      iconColor: "red",
+      showCancelButton: true,
+      confirmButtonColor: "darkred",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
 
-                        <Card sx={{ height: '87%', width: '95%', display: 'flex', background: "../backgrounds/wall.jpg", flexDirection: 'column', borderBottom: (theme) => `5px solid ${theme.palette.divider}`, borderColor: "#41424C", borderTopLeftRadius: "255px 15px", borderTopRightRadius: "15px 225px", borderBottomRightRadius: "225px 15px", borderBottomLeftRadius: "15px 255px", maxHeight: "10vw", filter: "invert(15%)", paddingBottom: 5 }}>
-                            <Container sx={{ display: "flex", flexDirection: "row" }}>
-                                <CardContent sx={{ flexGrow: 1, maxWidth: "40vw" }}>
-                                    <p className="hover1" style={{ fontFamily: "Righteous", fontSize: 35, WebkitTextStrokeWidth: 2, WebkitTextStrokeColor: "39393F", WebkitTextFillColor: "white", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                                        {articles.title}
-                                    </p>
-                                </CardContent>
-                                <CardActions>
-                                    <Container sx={{ display: "flex", flexDirection: "row", borderLeft:5, borderLeftStyle:"double" }}>
-                                        <Button className="hover-2" component={Link} to={'/editpost/' + articles.title.replace(/ /g, '-') + '?id=' + articles.id} size="small" variant="contained" style={{ fontFamily: "Righteous", fontSize: 20, color: "black", backgroundColor: "#C09372", padding: "10px 15px 20px" }}><p style={{ margin: 0, padding: 0, marginLeft: 6, filter: "drop-shadow(0.5px 0.5px 0.5px black)" }}>Edit</p></Button>
-                                        <Button className="hover-2" onClick={() => deletePost(articles.id)} size="small" variant="contained" style={{ fontFamily: "Righteous", fontSize: 20, color: "black", backgroundColor: "#8B0000", padding: "10px 15px 20px" }}><p style={{ margin: 0, padding: 0, marginLeft: 6, filter: "drop-shadow(0.5px 0.5px 0.5px black)" }}>Delete</p></Button>
-                                    </Container>
-                                </CardActions>
-                            </Container>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
-        </Container>
-    );
+    if (!result.isConfirmed) return;
+
+    try {
+      await fetch(`${process.env.REACT_APP_API_URL}/api/articles/${postId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      setPosts((prev) => prev.filter((p: any) => p.id !== postId));
+
+      Swal.fire("Deleted!", "Article has been deleted.", "success");
+    } catch (error) {
+      console.error("Failed to delete post:", error);
+      Swal.fire("Error", "Could not delete the post.", "error");
+    }
+  };
+
+  return (
+    <Container maxWidth="md" sx={styles.root}>
+      <h2 style={styles.header}>
+        <DoneOutlineIcon sx={{ color: "black" }} />
+        Your Posts
+        <img
+          src={require("../stickers/wtf.png")}
+          alt="icon"
+          style={styles.headerIcon}
+        />
+      </h2>
+
+      <Grid container spacing={1} sx={{ transform: "translate(1.5vw, -3vw)" }}>
+        {posts.map((post: any) => (
+          <Grid item key={post.id} xs={12}>
+            <CheckCircleOutlineIcon sx={styles.checkIcon} />
+
+            <Card sx={styles.card}>
+              <Container sx={styles.cardContainer}>
+                <CardContent sx={styles.cardContent}>
+                  <p style={styles.title}>{post.title}</p>
+                </CardContent>
+
+                <CardActions sx={styles.actions}>
+                  <Button
+                    component={Link}
+                    to={`/editpost/${post.title.replace(/ /g, "-")}?id=${post.id}`}
+                    size="small"
+                    variant="contained"
+                    sx={styles.editButton}
+                  >
+                    Edit
+                  </Button>
+
+                  <Button
+                    onClick={() => deletePost(post.id)}
+                    size="small"
+                    variant="contained"
+                    sx={styles.deleteButton}
+                  >
+                    Delete
+                  </Button>
+                </CardActions>
+              </Container>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Container>
+  );
 }
+
+const styles = {
+  root: {
+    py: 4,
+  },
+  header: {
+    fontFamily: "Cabin Sketch",
+    fontSize: 50,
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+  },
+  headerIcon: {
+    height: 30,
+    width: 30,
+    transform: "rotate(3deg)",
+  },
+  checkIcon: {
+    transform: "translate(-28px, 20px)",
+    color: "darkred",
+    filter: "drop-shadow(1px 1px 1px black)",
+  },
+  card: {
+    height: "87%",
+    width: "95%",
+    display: "flex",
+    flexDirection: "column",
+    borderBottom: (theme: any) => `5px solid ${theme.palette.divider}`,
+    borderColor: "#41424C",
+    borderRadius: "20px",
+    filter: "invert(15%)",
+    p: 2,
+    backgroundColor: "#2a2a2a",
+  },
+  cardContainer: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  cardContent: {
+    flexGrow: 1,
+    maxWidth: "40vw",
+  },
+  title: {
+    fontFamily: "Righteous",
+    fontSize: 35,
+    color: "white",
+    textOverflow: "ellipsis",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+  },
+  actions: {
+    display: "flex",
+    flexDirection: "row",
+    gap: 2,
+    borderLeft: 5,
+    borderLeftStyle: "double",
+    pl: 2,
+  },
+  editButton: {
+    fontFamily: "Righteous",
+    fontSize: 20,
+    color: "black",
+    backgroundColor: "#C09372",
+    "&:hover": { backgroundColor: "#b37e5c" },
+  },
+  deleteButton: {
+    fontFamily: "Righteous",
+    fontSize: 20,
+    color: "black",
+    backgroundColor: "#8B0000",
+    "&:hover": { backgroundColor: "#a00000" },
+  },
+};
